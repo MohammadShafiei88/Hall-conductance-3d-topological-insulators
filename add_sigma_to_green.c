@@ -1,170 +1,272 @@
-memset(T1_rightlead, 0, Nl * Nl * sizeof(float complex));
-memset(T2_rightlead, 0, Nl * Nl * sizeof(float complex));
-memset(sigma_rightlead, 0, Nl * Nl * sizeof(float complex));
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		T1_rightlead[2*(j*(Nl)+i)]=0.0;
+		T1_rightlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+}
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		T2_rightlead[2*(j*(Nl)+i)]=0.0;
+		T2_rightlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+}
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		sigma_rightlead[2*(j*(Nl)+i)]=0.0;
+		sigma_rightlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+}
+
 
 /************ matrix A of right lead using for T2_rightlead **************/
-for (int i = 0; i < Nl; i++)
+for(i=0;i<Nl;i++)
+	for(j=0;j<Nl;j++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        int iu = i / 4;
-        int ju = j / 4;
+	iu = i/4;
+	ju = j/4;
 
-        int ib = i % 4;
-        int jb = j % 4;
+	ib = i%4;
+	jb = j%4;
 
-        float dx = xx[i] - xx[j] - aa; // for right lead
-        float dy = yy[i] - yy[j];
-        float dz = zz[i] - zz[j];
+	dx = xx[i] - xx[j] - aa;	 /*  for right lead  */
+	dy = yy[i] - yy[j];
+	dz = zz[i] - zz[j];
 
-        float dx2 = dx * dx;
-        float dy2 = dy * dy;
-        float dz2 = dz * dz;
+	dx2 = dx*dx;
+	dy2 = dy*dy;
+	dz2 = dz*dz;
 
-        float dd2 = dx2 + dy2 + dz2;
-        float dd = sqrtf(dd2);
+	dd2 = dx2+dy2+dz2;
+	dd = sqrt(dd2);
+	
+	
+	if((dd<1.01*aa)&&(dd>0.99*aa))
+	{
+		    
+	 if((dx2<1.01*aa*aa)&&(dx2>0.99*aa*aa))
+		    {  T2_rightlead[2*(j*(Nl)+i)] += Ty[2*(jb*(4)+ib)];    T2_rightlead[2*(j*(Nl)+i)+1] += Ty[2*(jb*(4)+ib)+1];  }
+		
+	    if((dy2<1.01*aa*aa)&&(dy2>0.99*aa*aa))
+		    {  T2_rightlead[2*(j*(Nl)+i)] += Tx[2*(jb*(4)+ib)];    T2_rightlead[2*(j*(Nl)+i)+1] += Tx[2*(jb*(4)+ib)+1];  }
+		
+	    if((dz2<1.01*aa*aa)&&(dz2>0.99*aa*aa))
+		    {  T2_rightlead[2*(j*(Nl)+i)] += Tz[2*(jb*(4)+ib)];    T2_rightlead[2*(j*(Nl)+i)+1] += Tz[2*(jb*(4)+ib)+1];  }
+	
+}	
 
-        // nearest-neighbor coupling
-        if (dd < 1.01f * aa && dd > 0.99f * aa)
-        {
-            if (dx2 < 1.01f * aa * aa && dx2 > 0.99f * aa * aa)
-                T2_rightlead[j * Nl + i] += Ty[jb * 4 + ib];
+	
+		
 
-            if (dy2 < 1.01f * aa * aa && dy2 > 0.99f * aa * aa)
-                T2_rightlead[j * Nl + i] += Tx[jb * 4 + ib];
+}							 /* end of matrix A using for T2_rightlead  */
 
-            if (dz2 < 1.01f * aa * aa && dz2 > 0.99f * aa * aa)
-                T2_rightlead[j * Nl + i] += Tz[jb * 4 + ib];
-        }
-    }
-} /* end of matrix A using for T2_rightlead  */
 
 /************************/
 
-for (int i = 0; i < Nl; i++)
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        T1_rightlead[j * Nl + i] = conjf(T2_rightlead[i * Nl + j]);
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		T1_rightlead[2*(j*(Nl)+i)]=T2_rightlead[2*(i*(Nl)+j)];
+		T1_rightlead[2*(j*(Nl)+i)+1]=-T2_rightlead[2*(i*(Nl)+j)+1];
+	}
 }
 
-T1_dr = malloc(Nl * Nl * sizeof(float complex));
-T1_dl = malloc(Nl * Nl * sizeof(float complex));
 
-memset(T1_dr, 0, Nl * Nl * sizeof(float complex));
 
-for (int i = 0; i < Nl; i++)
+
+T1_dr=(double*)malloc((Nl)*(Nl)*2*sizeof(double));
+T1_dl=(double*)malloc((Nl)*(Nl)*2*sizeof(double));
+
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        for (int k = 0; k < Nl; k++)
-        {
-            T1_dr[j * Nl + i] += T1_rightlead[k * Nl + i] * dr[j * Nl + k];
-        }
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		T1_dr[2*(j*(Nl)+i)]=0.0;
+		T1_dr[2*(j*(Nl)+i)+1]=0.0;
+	}
 }
 
-for (int i = 0; i < Nl; i++)
+
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        for (int k = 0; k < Nl; k++)
-        {
-            sigma_rightlead[j * Nl + i] += T1_dr[k * Nl + i] * T2_rightlead[j * Nl + k];
-        }
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		for(k=0;k<(Nl);k++)
+		{
+			T1_dr[2*(j*(Nl)+i)]+=T1_rightlead[2*(k*(Nl)+i)]*dr[2*(j*(Nl)+k)]-T1_rightlead[2*(k*(Nl)+i)+1]*dr[2*(j*(Nl)+k)+1];
+			T1_dr[2*(j*(Nl)+i)+1]+=T1_rightlead[2*(k*(Nl)+i)]*dr[2*(j*(Nl)+k)+1]+T1_rightlead[2*(k*(Nl)+i)+1]*dr[2*(j*(Nl)+k)];
+		}
+	}
 }
 
-memset(T1_leftlead, 0, Nl * Nl * sizeof(float complex));
-memset(T2_leftlead, 0, Nl * Nl * sizeof(float complex));
-memset(sigma_leftlead, 0, Nl * Nl * sizeof(float complex));
+
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		for(k=0;k<(Nl);k++)
+		{
+			sigma_rightlead[2*(j*(Nl)+i)]+=T1_dr[2*(k*(Nl)+i)]*T2_rightlead[2*(j*(Nl)+k)]-T1_dr[2*(k*(Nl)+i)+1]*T2_rightlead[2*(j*(Nl)+k)+1];
+			sigma_rightlead[2*(j*(Nl)+i)+1]+=T1_dr[2*(k*(Nl)+i)]*T2_rightlead[2*(j*(Nl)+k)+1]+T1_dr[2*(k*(Nl)+i)+1]*T2_rightlead[2*(j*(Nl)+k)];
+		}
+	}
+}
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		T1_leftlead[2*(j*(Nl)+i)]=0.0;
+		T1_leftlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+}
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		T2_leftlead[2*(j*(Nl)+i)]=0.0;
+		T2_leftlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+}
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		sigma_leftlead[2*(j*(Nl)+i)]=0.0;
+		sigma_leftlead[2*(j*(Nl)+i)+1]=0.0;
+	}
+
+}
+
 
 /************ matrix A left using as matrix T2_leftlead **************/
-for (int i = 0; i < Nl; i++)
+for(i=0;i<Nl;i++)
+	for(j=0;j<Nl;j++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        int iu = i / 4;
-        int ju = j / 4;
+	iu = i/4;
+	ju = j/4;
 
-        int ib = i % 4;
-        int jb = j % 4;
+	ib = i%4;
+	jb = j%4;
 
-        float dx = xx[i] - xx[j] + aa; // for left lead
-        float dy = yy[i] - yy[j];
-        float dz = zz[i] - zz[j];
+	dx = xx[i] - xx[j] + aa;	 /*  for left lead  */
+	dy = yy[i] - yy[j];
+	dz = zz[i] - zz[j];
 
-        float dx2 = dx * dx;
-        float dy2 = dy * dy;
-        float dz2 = dz * dz;
+	dx2 = dx*dx;
+	dy2 = dy*dy;
+	dz2 = dz*dz;
 
-        float dd = sqrt(dx2 + dy2 + dz2);
+	dd2 = dx2+dy2+dz2;
+	dd = sqrt(dd2);
+	
+	if((dd<1.01*aa)&&(dd>0.99*aa))
+	{
+	    if((dx2<1.01*aa*aa)&&(dx2>0.99*aa*aa))
+		    { T2_leftlead[2*(j*(Nl)+i)] += Txd[2*(jb*(4)+ib)];    T2_leftlead[2*(j*(Nl)+i)+1] += Txd[2*(jb*(4)+ib)+1];  }
+		
+	    if((dy2<1.01*aa*aa)&&(dy2>0.99*aa*aa))
+		    {  T2_leftlead[2*(j*(Nl)+i)] += Tyd[2*(jb*(4)+ib)];    T2_leftlead[2*(j*(Nl)+i)+1] += Tyd[2*(jb*(4)+ib)+1];  }
+		
+	    if((dz2<1.01*aa*aa)&&(dz2>0.99*aa*aa))
+		    {  T2_leftlead[2*(j*(Nl)+i)] += Tzd[2*(jb*(4)+ib)];    T2_leftlead[2*(j*(Nl)+i)+1] += Tzd[2*(jb*(4)+ib)+1];  }
+	}	
 
-        if (dd > 0.99f * aa && dd < 1.01f * aa)
-        {
-            if (dx2 > 0.99f * aa * aa && dx2 < 1.01f * aa * aa)
-                T2_leftlead[j * Nl + i] += Txd[jb * 4 + ib];
-
-            if (dy2 > 0.99f * aa * aa && dy2 < 1.01f * aa * aa)
-                T2_leftlead[j * Nl + i] += Tyd[jb * 4 + ib];
-
-            if (dz2 > 0.99f * aa * aa && dz2 < 1.01f * aa * aa)
-                T2_leftlead[j * Nl + i] += Tzd[jb * 4 + ib];
-        }
-    }
 }
-/* end of matrix A right using as T2_leftlead */
+	
+								 /* end of matrix A right using as T2_leftlead */
+
+
 /************************/
 
-for (int i = 0; i < Nl; i++)
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        // transpose and take complex conjugate
-        T1_leftlead[j * Nl + i] = conjf(T2_leftlead[i * Nl + j]);
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		T1_leftlead[2*(j*(Nl)+i)]=T2_leftlead[2*(i*(Nl)+j)];
+		T1_leftlead[2*(j*(Nl)+i)+1]=-T2_leftlead[2*(i*(Nl)+j)+1];
+	}
 }
 
-memset(T1_dl, 0, Nl * Nl * sizeof(float complex));
 
-for (int i = 0; i < Nl; i++)
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        for (int k = 0; k < Nl; k++)
-        {
-            T1_dl[j * Nl + i] += T1_leftlead[k * Nl + i] * dl[j * Nl + k];
-        }
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		T1_dl[2*(j*(Nl)+i)]=0.0;
+		T1_dl[2*(j*(Nl)+i)+1]=0.0;
+	}
 }
 
-for (int i = 0; i < Nl; i++)
+
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        for (int k = 0; k < Nl; k++)
-        {
-            sigma_leftlead[j * Nl + i] += T1_dl[k * Nl + i] * T2_leftlead[j * Nl + k];
-        }
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		for(k=0;k<(Nl);k++)
+		{
+			T1_dl[2*(j*(Nl)+i)]+=T1_leftlead[2*(k*(Nl)+i)]*dl[2*(j*(Nl)+k)]-T1_leftlead[2*(k*(Nl)+i)+1]*dl[2*(j*(Nl)+k)+1];
+			T1_dl[2*(j*(Nl)+i)+1]+=T1_leftlead[2*(k*(Nl)+i)]*dl[2*(j*(Nl)+k)+1]+T1_leftlead[2*(k*(Nl)+i)+1]*dl[2*(j*(Nl)+k)];
+		}
+
+	}
 }
 
-for (int i = 0; i < Nl; i++)
+
+
+
+for(i=0;i<(Nl);i++)
 {
-    for (int j = 0; j < Nl; j++)
-    {
-        green[ipc[j] * ND + ipc[i]] += -sigma_rightlead[j * Nl + i];
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		for(k=0;k<(Nl);k++)
+		{
+			sigma_leftlead[2*(j*(Nl)+i)]+=T1_dl[2*(k*(Nl)+i)]*T2_leftlead[2*(j*(Nl)+k)]-T1_dl[2*(k*(Nl)+i)+1]*T2_leftlead[2*(j*(Nl)+k)+1];
+			sigma_leftlead[2*(j*(Nl)+i)+1]+=T1_dl[2*(k*(Nl)+i)]*T2_leftlead[2*(j*(Nl)+k)+1]+T1_dl[2*(k*(Nl)+i)+1]*T2_leftlead[2*(j*(Nl)+k)];
+		}
+	}
 }
 
-for (i = 0; i < (Nl); i++)
+
+for(i=0;i<(Nl);i++)
 {
-    for (j = 0; j < (Nl); j++)
-    {
-        green[(j + ND - Nl) * ND + (i + ND - Nl)] += (-sigma_leftlead[j * Nl + i]);
-    }
+	for(j=0;j<(Nl);j++)
+	{
+		green[2*(ipc[j]*ND+ipc[i])]+=(-sigma_rightlead[2*(j*(Nl)+i)]);
+		green[2*(ipc[j]*ND+ipc[i])+1]+=(-sigma_rightlead[2*(j*(Nl)+i)+1]);
+	}
 }
+
+
+for(i=0;i<(Nl);i++)
+{
+	for(j=0;j<(Nl);j++)
+	{
+		green[2*(((j+ND-Nl))*ND+((i+ND-Nl)))]+=(-sigma_leftlead[2*(j*(Nl)+i)]);
+		green[2*(((j+ND-Nl))*ND+((i+ND-Nl)))+1]+=(-sigma_leftlead[2*(j*(Nl)+i)+1]);
+	}
+}
+
 
 free(T1_dr);
 free(T1_dl);
+
+
